@@ -1,8 +1,6 @@
 {
   "name": "line-liff-quotation",
-  "version": 1,
+  "version": 2,
   "buildCommand": "echo 'Build complete'",
-  "outputDirectory": ".",
-  "framework": "static",
-  "public": true
+  "outputDirectory": "."
 }
