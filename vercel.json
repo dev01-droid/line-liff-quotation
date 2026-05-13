@@ -4,21 +4,5 @@
   "buildCommand": "echo 'Build complete'",
   "outputDirectory": ".",
   "framework": "static",
-  "public": true,
-  "env": {
-    "NODE_ENV": {
-      "description": "Environment",
-      "default": "production"
-    }
-  },
-  "routes": [
-    {
-      "src": "/",
-      "dest": "index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/"
-    }
-  ]
+  "public": true
 }
