@@ -1,0 +1,24 @@
+{
+  "name": "line-liff-quotation",
+  "version": 1,
+  "buildCommand": "echo 'Build complete'",
+  "outputDirectory": ".",
+  "framework": "static",
+  "public": true,
+  "env": {
+    "NODE_ENV": {
+      "description": "Environment",
+      "default": "production"
+    }
+  },
+  "routes": [
+    {
+      "src": "/",
+      "dest": "index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/"
+    }
+  ]
+}

@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตรวจสอบใบเสนอราคา</title>
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px 20px;
+        }
+
+        .loading, .error {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .loading {
+            color: #667eea;
+        }
+
+        .error {
+            color: #ff4d4f;
+            background: #fff1f0;
+            border-radius: 8px;
+            border: 2px solid #ff4d4f;
+        }
+
+        .quote-info {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .info-item {
+            text-align: left;
+        }
+
+        .info-item label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .info-item value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            display: block;
+        }
+
+        .customer-info {
+            grid-column: 1 / -1;
+        }
+
+        .items-section {
+            margin-bottom: 30px;
+        }
+
+        .items-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .items-table thead {
+            background: #f5f5f5;
+        }
+
+        .items-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #666;
+            font-size: 13px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .items-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .items-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .items-table tbody tr:hover {
+            background: #fafafa;
+        }
+
+        .amount-section {
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .amount-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .amount-row.total {
+            border-top: 2px solid #e0e0e0;
+            padding-top: 12px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .expired-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-valid {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .status-expired {
+            background: #fff1f0;
+            color: #ff4d4f;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-approve {
+            background: linear-gradient(135deg, #06C755 0%, #05a94a 100%);
+        }
+
+        .btn-approve:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(6, 199, 85, 0.4);
+        }
+
+        .btn-reject {
+            background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+        }
+
+        .btn-reject:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 77, 79, 0.4);
+        }
+
+        .notes {
+            background: #fffbe6;
+            border-left: 4px solid #faad14;
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 600px) {
+            .quote-info {
+                grid-template-columns: 1fr;
+            }
+
+            .items-table th, .items-table td {
+                padding: 8px;
+                font-size: 12px;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ใบเสนอราคา</h1>
+            <p>Quotation Verification System</p>
+        </div>
+
+        <div class="content">
+            <!-- Loading State -->
+            <div id="loadingState" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>กำลังดึงข้อมูล...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="error" style="display: none;">
+                <p id="errorMessage"></p>
+            </div>
+
+            <!-- Main Content -->
+            <div id="mainContent" style="display: none;">
+                <!-- Quote Header Info -->
+                <div class="quote-info">
+                    <div class="info-item">
+                        <label>เลขที่ใบเสนอราคา</label>
+                        <value id="quoteNumber">-</value>
+                    </div>
+                    <div class="info-item">
+                        <label>วันที่ออกใบเสนอราคา</label>
+                        <value id="quoteDate">-</value>
+                    </div>
+                    <div class="info-item">
+                        <label>วันหมดอายุ</label>
+                        <value id="expiryDate">-</value>
+                    </div>
+                    <div class="info-item">
+                        <label>สถานะ</label>
+                        <span id="statusBadge" class="expired-status"></span>
+                    </div>
+                    <div class="info-item customer-info">
+                        <label>ลูกค้า</label>
+                        <value id="customerName">-</value>
+                    </div>
+                </div>
+
+                <!-- Items Table -->
+                <div class="items-section">
+                    <h3>รายการสินค้า/บริการ</h3>
+                    <table class="items-table">
+                        <thead>
+                            <tr>
+                                <th>ลำดับที่</th>
+                                <th>รายการ</th>
+                                <th>จำนวน</th>
+                                <th>ราคา/หน่วย</th>
+                                <th style="text-align: right;">รวม</th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsTableBody">
+                            <!-- Items will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Amount Summary -->
+                <div class="amount-section">
+                    <div class="amount-row">
+                        <span>ยอดรวม:</span>
+                        <span id="subtotal">0.00</span>
+                    </div>
+                    <div class="amount-row">
+                        <span>ภาษีมูลค่าเพิ่ม (7%):</span>
+                        <span id="tax">0.00</span>
+                    </div>
+                    <div class="amount-row total">
+                        <span>ยอดชำระรวม:</span>
+                        <span id="totalAmount">0.00</span>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div id="notesSection" style="display: none;">
+                    <div class="notes">
+                        <strong>หมายเหตุ:</strong> <span id="notes"></span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="buttons">
+                    <button class="btn btn-approve" onclick="sendAction('อนุมัติ')" id="approveBtn">✓ อนุมัติ (Approve)</button>
+                    <button class="btn btn-reject" onclick="sendAction('ปฏิเสธ')" id="rejectBtn">✕ ปฏิเสธ (Reject)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ⚙️ Configuration
+        const config = {
+            liffId: "2010060668-AvmVlmqu",
+            apiBaseUrl: "https://your-api-domain.com/api" // เปลี่ยนเป็น API URL ของคุณ
+        };
+
+        let quotationData = null;
+
+        // 1️⃣ Initialize LIFF
+        async function initializeLiff() {
+            try {
+                await liff.init({ liffId: config.liffId });
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                } else {
+                    loadQuotation();
+                }
+            } catch (err) {
+                console.error('LIFF Init Error:', err);
+                showError('Failed to initialize LIFF: ' + err.message);
+            }
+        }
+
+        // 2️⃣ Load Quotation Data
+        async function loadQuotation() {
+            try {
+                showLoading();
+
+                // ดึง quotation ID จาก URL parameter
+                const urlParams = new URLSearchParams(window.location.search);
+                const quotationId = urlParams.get('id') || 'QU-2026-001';
+
+                // เรียก API เพื่อดึงข้อมูล quotation
+                const response = await fetch(`${config.apiBaseUrl}/quotation/${quotationId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status}`);
+                }
+
+                quotationData = await response.json();
+                renderQuotation();
+                hideLoading();
+            } catch (error) {
+                console.error('Load Quotation Error:', error);
+                
+                // Fallback: ถ้า API ไม่พร้อม ให้ใช้ข้อมูลตัวอย่าง
+                if (error.message.includes('Failed to fetch')) {
+                    quotationData = getDefaultQuotationData();
+                    renderQuotation();
+                    hideLoading();
+                } else {
+                    showError('ไม่สามารถโหลดข้อมูลใบเสนอราคา: ' + error.message);
+                }
+            }
+        }
+
+        // 3️⃣ Render Quotation
+        function renderQuotation() {
+            const data = quotationData;
+
+            // Set Basic Info
+            document.getElementById('quoteNumber').textContent = data.quotation_no || '-';
+            document.getElementById('quoteDate').textContent = formatDate(data.quote_date);
+            document.getElementById('expiryDate').textContent = formatDate(data.expiry_date);
+            document.getElementById('customerName').textContent = data.customer_name || '-';
+
+            // Set Status Badge
+            const isExpired = new Date(data.expiry_date) < new Date();
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.textContent = isExpired ? 'หมดอายุ' : 'ใช้ได้';
+            statusBadge.className = `expired-status ${isExpired ? 'status-expired' : 'status-valid'}`;
+
+            // Disable buttons if expired
+            if (isExpired) {
+                document.getElementById('approveBtn').disabled = true;
+                document.getElementById('rejectBtn').disabled = true;
+            }
+
+            // Render Items
+            const tbody = document.getElementById('itemsTableBody');
+            tbody.innerHTML = '';
+            let totalAmount = 0;
+
+            (data.items || []).forEach((item, index) => {
+                const itemTotal = item.quantity * item.unit_price;
+                totalAmount += itemTotal;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><strong>${item.description}</strong></td>
+                    <td style="text-align: center;">${item.quantity}</td>
+                    <td style="text-align: right;">${formatCurrency(item.unit_price)}</td>
+                    <td style="text-align: right;"><strong>${formatCurrency(itemTotal)}</strong></td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Set Amount Totals
+            const taxAmount = totalAmount * 0.07;
+            const grandTotal = totalAmount + taxAmount;
+
+            document.getElementById('subtotal').textContent = formatCurrency(totalAmount);
+            document.getElementById('tax').textContent = formatCurrency(taxAmount);
+            document.getElementById('totalAmount').textContent = formatCurrency(grandTotal);
+
+            // Show Notes if available
+            if (data.notes) {
+                document.getElementById('notesSection').style.display = 'block';
+                document.getElementById('notes').textContent = data.notes;
+            }
+        }
+
+        // 4️⃣ Send Action (Approve/Reject)
+        async function sendAction(action) {
+            try {
+                document.getElementById('approveBtn').disabled = true;
+                document.getElementById('rejectBtn').disabled = true;
+
+                const profile = await liff.getProfile();
+
+                // ส่งข้อมูลไปยัง Backend API
+                let response;
+                try {
+                    response = await fetch(`${config.apiBaseUrl}/quotation/${quotationData.id}/action`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            action: action,
+                            approved_by: profile.displayName,
+                            user_id: profile.userId,
+                            timestamp: new Date().toISOString()
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to save action');
+                    }
+                } catch (apiError) {
+                    // ถ้า API ไม่พร้อม ให้ใช้ Mock Response (สำหรับทดสอบ)
+                    console.warn('API not available, using mock response:', apiError);
+                    response = { ok: true, status: 200 };
+                }
+
+                // ส่งข้อความไป LINE chat
+                if (liff.isInClient()) {
+                    await liff.sendMessages([
+                        {
+                            type: 'text',
+                            text: `✓ ได้รับการ${action}ใบเสนอราคา #${quotationData.quotation_no}\nโดย: ${profile.displayName}\nวันเวลา: ${new Date().toLocaleString('th-TH')}`
+                        }
+                    ]);
+                    alert(`คุณได้ทำการ ${action} เรียบร้อยแล้ว`);
+                    liff.closeWindow();
+                } else {
+                    alert(`ใช้งานบนเบราว์เซอร์: คุณได้ทำการ ${action} ใบเสนอราคา`);
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Send Action Error:', error);
+                alert('เกิดข้อผิดพลาด: ' + error.message);
+                document.getElementById('approveBtn').disabled = false;
+                document.getElementById('rejectBtn').disabled = false;
+            }
+        }
+
+        // 5️⃣ Utility Functions
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('th-TH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('th-TH', {
+                style: 'currency',
+                currency: 'THB'
+            }).format(amount);
+        }
+
+        function showLoading() {
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('errorState').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+        }
+
+        function showError(message) {
+            document.getElementById('errorState').style.display = 'block';
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('loadingState').style.display = 'none';
+        }
+
+        // 6️⃣ Default Data (ใช้สำหรับ Testing)
+        function getDefaultQuotationData() {
+            return {
+                id: 1,
+                quotation_no: 'QU-2026-001',
+                customer_name: 'บริษัท ABC จำกัด',
+                quote_date: '2026-05-10',
+                expiry_date: '2026-06-10',
+                notes: 'ราคานี้มีผลบังคับใช้เมื่อตรวจสอบและยอมรับภายในวันหมดอายุเท่านั้น',
+                items: [
+                    {
+                        description: 'สินค้า A (รหัส: SKU-001)',
+                        quantity: 10,
+                        unit_price: 500
+                    },
+                    {
+                        description: 'สินค้า B (รหัส: SKU-002)',
+                        quantity: 5,
+                        unit_price: 800
+                    },
+                    {
+                        description: 'บริการติดตั้ง',
+                        quantity: 1,
+                        unit_price: 2000
+                    }
+                ]
+            };
+        }
+
+        // 7️⃣ Start Application
+        initializeLiff();
+    </script>
+</body>
+</html>

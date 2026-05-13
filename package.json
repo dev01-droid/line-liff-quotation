@@ -1,0 +1,22 @@
+{
+  "name": "line-liff-quotation",
+  "version": "1.0.0",
+  "description": "LINE LIFF Quotation Verification System",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "serve": "npx http-server",
+    "vercel-build": "echo 'Build complete'"
+  },
+  "keywords": [
+    "line",
+    "liff",
+    "quotation",
+    "verification"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": "18.x"
+  }
+}
